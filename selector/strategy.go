@@ -15,6 +15,7 @@ func init() {
 
 // Random is a random strategy algorithm for node selection
 func Random(services []*registry.Service) Next {
+	log.Logf("random selector")
 	var nodes []*registry.Node
 
 	for _, service := range services {
@@ -34,6 +35,7 @@ func Random(services []*registry.Service) Next {
 
 // RoundRobin is a roundrobin strategy algorithm for node selection
 func RoundRobin(services []*registry.Service) Next {
+	log.Logf("roundrobin selector")
 	var nodes []*registry.Node
 
 	for _, service := range services {
