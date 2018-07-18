@@ -102,7 +102,7 @@ func (c *cacheSelector) get(service string) ([]*registry.Service, error) {
 		}
 
 		// cache results
-		c.set(service, c.cp(services)) 
+		c.set(service, c.cp(services))
 		return services, nil
 	}
 
@@ -372,6 +372,16 @@ func (c *cacheSelector) Select(service string, opts ...selector.SelectOption) (s
 	}
 
 	log.Logf("select services filtered  -> %+v",services)
+
+	for _, s := range services {
+		log.Logf("service[%s]",s.Name)
+		for _, e := range s.Endpoints {
+			log.Logf("\tendpoint -> ", e.Name)
+		}
+		for _, n := range s.Nodes {
+			log.Logf("\tendpoint -> %s %s:%d", n.Id, n.Address, n.Port )
+		}
+	}
 
 	// if there's nothing left, return
 	if len(services) == 0 {
