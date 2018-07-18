@@ -388,11 +388,7 @@ func (c *cacheSelector) Select(service string, opts ...selector.SelectOption) (s
 		return nil, selector.ErrNoneAvailable
 	}
 
-	sret := sopts.Strategy(services)
-
-	log.Logf("sret nodes -> %s %s:%d", sret.Id, sret.Address, sret.Port )
-
-	return sret, nil
+	return sopts.Strategy(services), nil
 }
 
 func (c *cacheSelector) Mark(service string, node *registry.Node, err error) {
