@@ -102,7 +102,7 @@ func (c *cacheSelector) get(service string) ([]*registry.Service, error) {
 		}
 
 		// cache results
-		c.set(service, c.cp(services))
+		c.set(service, c.cp(services)) 
 		return services, nil
 	}
 
