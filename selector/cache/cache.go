@@ -376,10 +376,10 @@ func (c *cacheSelector) Select(service string, opts ...selector.SelectOption) (s
 	for _, s := range services {
 		log.Logf("service[%s]",s.Name)
 		for _, e := range s.Endpoints {
-			log.Logf("\tendpoint -> ", e.Name)
+			log.Logf("endpoint -> %s", e.Name)
 		}
 		for _, n := range s.Nodes {
-			log.Logf("\tendpoint -> %s %s:%d", n.Id, n.Address, n.Port )
+			log.Logf("nodes -> %s %s:%d", n.Id, n.Address, n.Port )
 		}
 	}
 
@@ -388,7 +388,11 @@ func (c *cacheSelector) Select(service string, opts ...selector.SelectOption) (s
 		return nil, selector.ErrNoneAvailable
 	}
 
-	return sopts.Strategy(services), nil
+	sret := sopts.Strategy(services)
+
+	log.Logf("sret nodes -> %s %s:%d", sret.Id, sret.Address, sret.Port )
+
+	return sret, nil
 }
 
 func (c *cacheSelector) Mark(service string, node *registry.Node, err error) {
