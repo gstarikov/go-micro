@@ -86,6 +86,7 @@ func (c *cacheSelector) get(service string) ([]*registry.Service, error) {
 
 	// watch service if not watched
 	if _, ok := c.watched[service]; !ok {
+		log.Logf("get add watch -> %s",service)
 		go c.run(service)
 		c.watched[service] = true
 	}
@@ -96,6 +97,7 @@ func (c *cacheSelector) get(service string) ([]*registry.Service, error) {
 		// ask the registry
 		services, err := c.so.Registry.GetService(service)
 		if err != nil {
+			log.Logf("get ask registry -> %v",err)
 			return nil, err
 		}
 
@@ -107,6 +109,8 @@ func (c *cacheSelector) get(service string) ([]*registry.Service, error) {
 	// check the cache first
 	services, ok := c.cache[service]
 
+	log.Logf("get cache -> %t , len=%d",ok, len(services))
+
 	// cache miss or no services
 	if !ok || len(services) == 0 {
 		return get(service)
@@ -117,11 +121,13 @@ func (c *cacheSelector) get(service string) ([]*registry.Service, error) {
 
 	// within ttl so return cache
 	if kk && time.Since(ttl) < c.ttl {
+		log.Logf("ttl good [%s]",service)
 		return c.cp(services), nil
 	}
 
 	// expired entry so get service
 	services, err := get(service)
+	log.Logf("get expired -> %+v, len=%d",err,len(services))
 
 	// no error then return error
 	if err == nil {
@@ -135,6 +141,7 @@ func (c *cacheSelector) get(service string) ([]*registry.Service, error) {
 
 	// other error
 
+	log.Logf("get return expired -> %s",service)
 	// return expired cache as last resort
 	return c.cp(services), nil
 }
@@ -156,6 +163,7 @@ func (c *cacheSelector) update(res *registry.Result) {
 	if !ok {
 		// we're not going to cache anything
 		// unless there was already a lookup
+		log.Logf("update. service[%s] not in cache",res.Service.Name)
 		return
 	}
 
@@ -267,6 +275,7 @@ func (c *cacheSelector) run(name string) {
 		w, err := c.so.Registry.Watch(
 			registry.WatchService(name),
 		)
+		log.Logf("new watcher. err = %v", err)
 		if err != nil {
 			if c.quit() {
 				return
@@ -306,9 +315,11 @@ func (c *cacheSelector) watch(w registry.Watcher) error {
 
 	for {
 		res, err := w.Next()
+		log.Logf("watcher Next. err = %v", err)
 		if err != nil {
 			return err
 		}
+		log.Logf("watcher. res action %s service -> %+v", res.Action, res.Service)
 		c.update(res)
 	}
 }
@@ -347,15 +358,20 @@ func (c *cacheSelector) Select(service string, opts ...selector.SelectOption) (s
 	// get the service
 	// try the cache first
 	// if that fails go directly to the registry
+	log.Logf("select -> %s",service)
 	services, err := c.get(service)
 	if err != nil {
+		log.Logf("select err -> %v",err)
 		return nil, err
 	}
+	log.Logf("select services -> %+v",services)
 
 	// apply the filters
 	for _, filter := range sopts.Filters {
 		services = filter(services)
 	}
+
+	log.Logf("select services filtered  -> %+v",services)
 
 	// if there's nothing left, return
 	if len(services) == 0 {
